@@ -2,14 +2,17 @@
 
 const Product = require('../models/product');
 
-exports.getProducts = (req, res, next) => {
-  Product.fetchAll((products) => {
+exports.getProducts = async (req, res, next) => {
+  try {
+    let products = await Product.findAll();
     res.render('admin/products', {
       prods: products,
       pageTitle: 'Admin Products',
       path: '/admin/products',
     });
-  });
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 exports.getAddProduct = (req, res, next) => {
@@ -20,25 +23,31 @@ exports.getAddProduct = (req, res, next) => {
   });
 };
 
-exports.postAddProduct = (req, res, next) => {
+//FIRST MYSQL SHIT
+exports.postAddProduct = async (req, res, next) => {
   const { title, imageUrl, price, description } = req.body;
-  const product = new Product(title, imageUrl, description, price, null);
-  product
-    .save()
-    .then(() => res.redirect('/'))
-    .catch((err) => console.log(err));
+  try {
+    await req.user.createProduct({
+      title,
+      imageUrl,
+      price,
+      description,
+    });
+    res.redirect('/');
+  } catch (error) {
+    console.log(error);
+  }
 };
 
-exports.getEditProduct = (req, res, next) => {
+exports.getEditProduct = async (req, res, next) => {
   //check query parameters
-  const editMode = req.query.edit;
+  const editMode = req.query.edit; //url/:prodId?edit=true
+  const prodId = req.params.prodId;
   if (!editMode) {
     return res.redirect('/');
   }
-  const prodId = req.params.prodId;
-  Product.findById(prodId, (product) => {
-    console.log(product);
-
+  try {
+    let product = await Product.findByPk(prodId);
     if (!product) {
       return res.redirect('/');
     }
@@ -48,23 +57,35 @@ exports.getEditProduct = (req, res, next) => {
       editing: editMode,
       product: product,
     });
-  });
+  } catch (error) {
+    console.log(error);
+  }
 };
 
-exports.postEditProduct = (req, res, next) => {
+exports.postEditProduct = async (req, res, next) => {
   const prodId = req.body.prodId;
   const { title, imageUrl, description, price } = req.body;
-  //create new instance with received data
-  const updatedProduct = new Product(title, imageUrl, description, price, prodId);
-  //save
-  updatedProduct.save();
-  res.redirect('/admin/products');
+
+  try {
+    let updatedProduct = await Product.findByPk(prodId);
+    updatedProduct.title = title;
+    updatedProduct.imageUrl = imageUrl;
+    updatedProduct.description = description;
+    updatedProduct.price = price;
+    await updatedProduct.save();
+    res.redirect('/admin/products');
+  } catch (error) {
+    console.log(error);
+  }
 };
 
-exports.postDeleteProduct = (req, res, next) => {
+exports.postDeleteProduct = async (req, res, next) => {
   const prodId = req.params.prodId;
-  Product.deleteById(prodId, () => {
-    console.log('callback after Product.delete() executed');
-  });
-  res.redirect('/admin/products');
+  try {
+    let deletedProd = await Product.findByPk(prodId);
+    await deletedProd.destroy();
+    res.redirect('/admin/products');
+  } catch (error) {
+    console.log(error);
+  }
 };

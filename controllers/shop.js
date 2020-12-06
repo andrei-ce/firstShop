@@ -3,41 +3,45 @@
 const Product = require('../models/product');
 const Cart = require('../models/cart');
 
-exports.getIndex = (req, res, next) => {
-  Product.fetchAll()
-    .then(([rows, fieldData]) => {
-      res.render('shop/index', {
-        prods: rows,
-        pageTitle: 'Shop',
-        path: '/',
-      });
-    })
-    .catch((err) => console.log(err));
+exports.getIndex = async (req, res, next) => {
+  try {
+    let allProducts = await Product.findAll();
+    res.render('shop/index', {
+      prods: allProducts,
+      pageTitle: 'Shop',
+      path: '/',
+    });
+  } catch (error) {
+    console.log(error);
+  }
 };
 
-exports.getProducts = (req, res, next) => {
-  Product.fetchAll()
-    .then(([rows, fieldData]) => {
-      res.render('shop/product-list', {
-        prods: rows,
-        pageTitle: 'All Products',
-        path: '/products',
-      });
-    })
-    .catch((err) => console.log(err));
+exports.getProducts = async (req, res, next) => {
+  try {
+    let allProducts = await Product.findAll();
+    res.render('shop/product-list', {
+      prods: allProducts,
+      pageTitle: 'All Products',
+      path: '/products',
+    });
+  } catch (error) {
+    console.log(error);
+  }
 };
 
-exports.getProduct = (req, res, next) => {
+exports.getProduct = async (req, res, next) => {
   var prodId = req.params.prodId;
-  Product.findById(prodId)
-    .then(([product]) => {
-      res.render('shop/product-detail', {
-        product: product[0],
-        pageTitle: product.title,
-        path: '/products',
-      });
-    })
-    .catch((err) => console.log(err));
+  try {
+    let product = await Product.findByPk(prodId);
+    // let products = await Product.findAll({where: {íd: prodId}}); //returns array of 1 el
+    res.render('shop/product-detail', {
+      product,
+      pageTitle: product.title,
+      path: '/products',
+    });
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 exports.getCart = (req, res, next) => {
