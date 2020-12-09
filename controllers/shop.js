@@ -1,8 +1,6 @@
 // >>> ALL LOGIC THAT A SHOPPING CUSTOMER NEEDS <<<
 
 const Product = require('../models/product');
-const Cart = require('../models/cart');
-const CartItem = require('../models/cart-item');
 
 exports.getIndex = async (req, res, next) => {
   try {
@@ -77,6 +75,7 @@ exports.postCart = async (req, res, next) => {
       console.log('New product (in cart)!');
       product = await Product.findByPk(prodId);
     }
+    //through adds an additional attribute to cartItem
     await cart.addProduct(product, { through: { quantity: newQty } });
     res.redirect('/cart');
     console.log('The end');
@@ -86,7 +85,6 @@ exports.postCart = async (req, res, next) => {
 };
 
 exports.postDeleteCartItem = async (req, res, next) => {
-  console.log('=====================*====================');
   const prodId = req.params.prodId;
   const user = req.user;
   try {
@@ -100,16 +98,43 @@ exports.postDeleteCartItem = async (req, res, next) => {
   res.redirect('/cart');
 };
 
-exports.getOrders = (req, res, next) => {
-  res.render('shop/orders', {
-    path: '/orders',
-    pageTitle: 'Your Orders',
-  });
+exports.postOrder = async (req, res) => {
+  console.log('POST ORDER CONTROLLER');
+  let user = req.user;
+  try {
+    //get cart & products
+    let cart = await user.getCart();
+    let cartProducts = await cart.getProducts();
+    console.log('UUUUUUUUUUUU');
+    //create order linked to user
+    let order = await user.createOrder();
+    console.log(order);
+    // add all products from cart to order: need to add qty individually to each prod
+    await order.addProducts(
+      cartProducts.map((prod) => {
+        //from orderItem Model name
+        prod.orderItem = { quantity: prod.cartItem.quantity }; //the quantity is available in cartItem object stored in each product
+        return prod;
+      })
+    );
+    //empty cart
+    let emptyCart = await cart.setProducts(null);
+    res.redirect('/orders');
+  } catch (error) {
+    console.log(error);
+  }
 };
 
-exports.getCheckout = (req, res, next) => {
-  res.render('shop/checkout', {
-    path: '/checkout',
-    pageTitle: 'Checkout',
-  });
+exports.getOrders = async (req, res, next) => {
+  let user = req.user;
+  try {
+    let orders = await user.getOrders({ include: ['products'] });
+    res.render('shop/orders', {
+      path: '/orders',
+      pageTitle: 'Your Orders',
+      orders: orders,
+    });
+  } catch (error) {
+    console.log(error);
+  }
 };

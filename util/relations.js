@@ -19,7 +19,8 @@ module.exports = setRelations = () => {
   Cart.belongsToMany(Product, { through: CartItem }); //this means products are linked to carts through a table called Cart-items (in which these relations are stored)
 
   // Order-User-Product logic (Order-item table)
-  Order.belongsTo(User); //here its not Order-Cart-User (Order.belongsTo(Cart)) because we cant to use the same cart to shop for other things once an order is paid
-  Product.belongsToMany(Order, { through: OrderItem });
-  // Order.belongsToMany(Product, { through: OrderItem }); //not necessary
+  Order.belongsTo(User); //here its not Order-Cart-User (Order.belongsTo(Cart)) because we can use the same cart to shop for other things once an order is paid
+  User.hasMany(Order); //created user.create(order)
+  Order.belongsToMany(Product, { through: OrderItem }); //created order.addProducts()
+  // Product.belongsToMany(Order, { through: OrderItem }); //order.addProducts is not a function
 };
