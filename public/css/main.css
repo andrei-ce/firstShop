@@ -24,7 +24,7 @@ form {
 }
 
 .image {
-  height: 25rem;
+  height: 20rem;
 }
 
 .image img {
@@ -38,7 +38,6 @@ form {
   padding: 0 1.5rem;
   display: flex;
   align-items: center;
-  box-shadow: 1px 7px 5px -2px rgba(0, 0, 0, 0.2);
 }
 
 .main-header__nav {
@@ -67,7 +66,7 @@ form {
 .main-header__item a:hover,
 .main-header__item a:active,
 .main-header__item a.active {
-  color: #ffc13b;
+  color: #ffeb3b;
 }
 
 .mobile-nav {
@@ -104,9 +103,8 @@ form {
 .mobile-nav__item a {
   text-decoration: none;
   color: black;
-  font-size: 1.2rem;
+  font-size: 1.5rem;
   padding: 0.5rem 2rem;
-  width: 100%;
 }
 
 .mobile-nav__item a:active,
@@ -115,7 +113,6 @@ form {
   background: #00695c;
   color: white;
   border-radius: 3px;
-  width: 100%;
 }
 
 #side-menu-toggle {
@@ -138,7 +135,6 @@ form {
   border-color: #ffeb3b;
 }
 
-/*  this is a modal!!! */
 .backdrop {
   position: fixed;
   top: 0;
@@ -158,7 +154,6 @@ form {
 }
 
 .card {
-  border-radius: 11px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
 }
 
@@ -179,7 +174,6 @@ form {
 }
 
 .card__image img {
-  object-fit: cover;
   width: 100%;
 }
 
@@ -222,12 +216,11 @@ form {
   color: white;
 }
 
-/* this is where css understands screen size */
 @media (min-width: 768px) {
   .main-header__nav {
     display: flex;
   }
-  /* dont show slider menu if screen is less than 768px wide */
+
   #side-menu-toggle {
     display: none;
   }
