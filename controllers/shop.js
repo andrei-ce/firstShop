@@ -2,6 +2,7 @@
 
 const Product = require('../models/product');
 const Cart = require('../models/cart');
+const CartItem = require('../models/cart-item');
 
 exports.getIndex = async (req, res, next) => {
   try {
@@ -44,39 +45,58 @@ exports.getProduct = async (req, res, next) => {
   }
 };
 
-exports.getCart = (req, res, next) => {
-  Cart.getCart((cart) => {
-    Product.fetchAll((products) => {
-      const cartProducts = [];
-      for (product of products) {
-        const cartProductData = cart.products.find((p) => p.id === product.id);
-        if (cartProductData) {
-          cartProducts.push({ productData: product, qty: cartProductData.qty });
-        }
-      }
-      res.render('shop/cart', {
-        path: '/cart',
-        pageTitle: 'Your Cart',
-        products: cartProducts,
-      });
+exports.getCart = async (req, res, next) => {
+  const user = req.user; //from middleware
+  try {
+    let cart = await user.getCart(); //this works because a cart is connected to this user and mySQL adds functions like getCart()
+    let cartProducts = await cart.getProducts();
+    res.render('shop/cart', {
+      path: '/cart',
+      pageTitle: 'Your Cart',
+      products: cartProducts,
     });
-  });
+  } catch (error) {
+    console.log(error);
+  }
 };
 
-exports.postCart = (req, res, next) => {
-  console.log('123');
+exports.postCart = async (req, res, next) => {
   const prodId = req.body.productId;
-  Product.findById(prodId, (product) => {
-    Cart.addProduct(prodId, product.price);
-  });
-  res.redirect('/cart');
+  const user = req.user; //from middleware
+  try {
+    let cart = await user.getCart();
+    let selectedProducts = await cart.getProducts({ where: { id: prodId } });
+    let product;
+    let newQty = 1;
+    if (selectedProducts.length > 0) {
+      console.log('Product already in cart!');
+      product = selectedProducts[0];
+      const oldQty = product.cartItem.quantity;
+      newQty = oldQty + 1;
+    } else {
+      console.log('New product (in cart)!');
+      product = await Product.findByPk(prodId);
+    }
+    await cart.addProduct(product, { through: { quantity: newQty } });
+    res.redirect('/cart');
+    console.log('The end');
+  } catch (error) {
+    console.log(error);
+  }
 };
 
-exports.postDeleteCartItem = (req, res, next) => {
+exports.postDeleteCartItem = async (req, res, next) => {
+  console.log('=====================*====================');
   const prodId = req.params.prodId;
-  Product.findById(prodId, (product) => {
-    Cart.deleteProduct(prodId, product.price);
-  });
+  const user = req.user;
+  try {
+    let currentCart = await user.getCart();
+    let selectedProducts = await currentCart.getProducts({ where: { id: prodId } });
+    let product = selectedProducts[0];
+    await product.cartItem.destroy();
+  } catch (error) {
+    console.log(error);
+  }
   res.redirect('/cart');
 };
 

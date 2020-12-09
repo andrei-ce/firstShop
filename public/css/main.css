@@ -211,6 +211,17 @@ form {
   color: white;
 }
 
+.btn.danger {
+  color: red;
+  border-color: red;
+}
+
+.btn.danger:hover,
+.btn.danger:active {
+  background: red;
+  color: white;
+}
+
 /* this is where css understands screen size */
 @media (min-width: 768px) {
   .main-header__nav {

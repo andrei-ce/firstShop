@@ -3,8 +3,9 @@
 const Product = require('../models/product');
 
 exports.getProducts = async (req, res, next) => {
+  const user = req.user;
   try {
-    let products = await Product.findAll();
+    let products = await user.getProducts();
     res.render('admin/products', {
       prods: products,
       pageTitle: 'Admin Products',
@@ -43,11 +44,14 @@ exports.getEditProduct = async (req, res, next) => {
   //check query parameters
   const editMode = req.query.edit; //url/:prodId?edit=true
   const prodId = req.params.prodId;
+  const user = req.user;
   if (!editMode) {
     return res.redirect('/');
   }
   try {
-    let product = await Product.findByPk(prodId);
+    // let product = await Product.findByPk(prodId);
+    let products = await user.getProducts({ where: { id: prodId } });
+    let product = products[0];
     if (!product) {
       return res.redirect('/');
     }
