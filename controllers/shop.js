@@ -46,10 +46,12 @@ exports.getIndex = async (req, res, next) => {
 };
 
 exports.getCart = async (req, res, next) => {
+  console.log('in getCart function_______________');
   try {
     //execPopulate() is needed because req.user is an existing document
     let user = await req.user.populate('cart.items.productId').execPopulate();
     const products = user.cart.items;
+    console.log(products);
     res.render('shop/cart', {
       path: '/cart',
       pageTitle: 'Your Cart',

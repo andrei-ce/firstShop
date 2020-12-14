@@ -11,18 +11,6 @@ const connectDB = async (cb) => {
       useCreateIndex: true,
       useFindAndModify: false,
     });
-    let user = await User.findOne();
-    // console.log(user);
-    if (!user) {
-      const user = new User({
-        name: 'Max',
-        email: 'max@test.com',
-        cart: {
-          items: [],
-        },
-      });
-      user.save();
-    }
     console.log('MongDB connected...');
     cb();
   } catch (error) {
