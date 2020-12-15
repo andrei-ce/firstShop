@@ -5,38 +5,21 @@ const bodyParser = require('body-parser');
 // const sessionConfig = require('./middleware/sessions');
 const userProvider = require('./middleware/userProvider');
 const connectDB = require('./services/db');
-const session = require('express-session');
-const MongoDBStore = require('connect-mongodb-session')(session);
-const config = require('config');
+const sessionConfig = require('./middleware/sessions');
+const csrfMiddleware = require('./middleware/csrf');
 const csrf = require('csurf');
 
 // ____ Middlewares ____
 const app = express();
-const store = new MongoDBStore({
-  uri: config.get('mongoURI'),
-  collection: 'sessions',
-});
 const csrfProtection = csrf();
 app.set('view engine', 'ejs');
 app.set('views', 'views');
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(
-  session({
-    secret: config.get('sessionSecret'),
-    resave: false,
-    saveUninitialized: false,
-    store: store,
-    // cookie: { httpOnly: true, secure: true },
-  })
-);
+app.use(sessionConfig);
 app.use(csrfProtection);
 app.use(userProvider);
-app.use((req, res, next) => {
-  res.locals.isAuth = req.session.isAuth;
-  res.locals.csrfToken = req.csrfToken();
-  next();
-});
+app.use(csrfMiddleware);
 
 // ____ Routes ____
 const adminRoutes = require('./routes/admin');

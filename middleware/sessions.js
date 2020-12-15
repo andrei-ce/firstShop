@@ -12,7 +12,7 @@ const sessionConfig = session({
   resave: false,
   saveUninitialized: false,
   store: store,
-  cookie: { httpOnly: true, secure: true },
+  // cookie: { httpOnly: true, secure: true },
 });
 
 module.exports = sessionConfig;
