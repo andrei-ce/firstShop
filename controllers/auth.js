@@ -6,7 +6,6 @@ exports.getLogin = async (req, res) => {
     res.render('auth/login', {
       path: '/login',
       pageTitle: 'Login',
-      isAuth: false,
     });
   } catch (error) {
     console.log(error);
@@ -17,7 +16,6 @@ exports.getSignup = (req, res) => {
   res.render('auth/signup', {
     path: '/signup',
     pageTitle: 'Signup',
-    isAuth: false,
   });
 };
 
@@ -25,13 +23,17 @@ exports.postLogin = async (req, res) => {
   try {
     let { email, password } = req.body;
     let user = await User.findOne({ email: email });
+    if (!user) {
+      return res.redirect('/login');
+    }
     let doMatch = await bcrypt.compare(password, user.password);
     if (doMatch) {
+      console.log('Match!');
       //use .save() method to make sure it redirects only when session is already created
       req.session.user = user;
       req.session.isAuth = true;
-      return req.session.save(() => {
-        res.redirect('/');
+      req.session.save(() => {
+        return res.redirect('/');
       });
     } else {
       return res.redirect('/login');

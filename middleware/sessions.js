@@ -5,15 +5,14 @@ const config = require('config');
 const store = new MongoDBStore({
   uri: config.get('mongoURI'),
   collection: 'sessions',
-  expires: 300,
 });
 
 const sessionConfig = session({
   secret: config.get('sessionSecret'),
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 1000 * 60 * 60 * 24 * 7 },
   store: store,
+  cookie: { httpOnly: true, secure: true },
 });
 
 module.exports = sessionConfig;

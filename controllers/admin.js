@@ -1,4 +1,5 @@
 const Product = require('../models/product');
+const User = require('../models/user');
 
 exports.getAddProduct = (req, res, next) => {
   res.render('admin/edit-product', {
@@ -93,6 +94,8 @@ exports.postDeleteProduct = async (req, res, next) => {
   try {
     const prodId = req.body.productId;
     await Product.findByIdAndRemove(prodId);
+    //TODO: DELETE THIS PRODUCT IN ALL CARTS
+    // await User.find({cart.items : $in {blablabla }});
     console.log('DESTROYED PRODUCT');
     res.redirect('/admin/products');
   } catch (error) {
