@@ -8,6 +8,7 @@ const connectDB = require('./services/db');
 const sessionConfig = require('./middleware/sessions');
 const csrfMiddleware = require('./middleware/csrf');
 const csrf = require('csurf');
+const flash = require('connect-flash');
 
 // ____ Middlewares ____
 const app = express();
@@ -20,6 +21,7 @@ app.use(sessionConfig);
 app.use(csrfProtection);
 app.use(userProvider);
 app.use(csrfMiddleware);
+app.use(flash());
 
 // ____ Routes ____
 const adminRoutes = require('./routes/admin');

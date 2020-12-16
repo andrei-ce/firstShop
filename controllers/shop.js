@@ -1,7 +1,7 @@
 const Product = require('../models/product');
 const Order = require('../models/order');
 
-exports.getProducts = async (req, res, next) => {
+exports.getProducts = async (req, res) => {
   try {
     let products = await Product.find();
     res.render('shop/product-list', {
@@ -15,7 +15,7 @@ exports.getProducts = async (req, res, next) => {
   }
 };
 
-exports.getProduct = async (req, res, next) => {
+exports.getProduct = async (req, res) => {
   try {
     const prodId = req.params.productId;
     let product = await Product.findById(prodId);
@@ -30,9 +30,8 @@ exports.getProduct = async (req, res, next) => {
   }
 };
 
-exports.getIndex = async (req, res, next) => {
+exports.getIndex = async (req, res) => {
   try {
-    // const isAuth = req.get('Cookie').split(';')[0].trim().split('=')[1];
     let products = await Product.find();
     res.render('shop/index', {
       prods: products,
@@ -45,8 +44,7 @@ exports.getIndex = async (req, res, next) => {
   }
 };
 
-exports.getCart = async (req, res, next) => {
-  console.log('in getCart function_______________');
+exports.getCart = async (req, res) => {
   try {
     //execPopulate() is needed because req.user is an existing document
     let user = await req.user.populate('cart.items.productId').execPopulate();
@@ -63,7 +61,7 @@ exports.getCart = async (req, res, next) => {
   }
 };
 
-exports.postCart = async (req, res, next) => {
+exports.postCart = async (req, res) => {
   try {
     const prodId = req.body.productId;
     let product = await Product.findById(prodId);
@@ -74,7 +72,7 @@ exports.postCart = async (req, res, next) => {
   }
 };
 
-exports.postCartDeleteProduct = async (req, res, next) => {
+exports.postCartDeleteProduct = async (req, res) => {
   try {
     const prodId = req.body.productId;
     await req.user.removeFromCart(prodId);
@@ -84,29 +82,31 @@ exports.postCartDeleteProduct = async (req, res, next) => {
   }
 };
 
-exports.postOrder = async (req, res, next) => {
+exports.postOrder = async (req, res) => {
   try {
-    let products = req.user.cart.items.map((i) => {
-      return { quantity: i.quantity, product: { ...i.productId._doc } };
+    let user = await req.user.populate('cart.items.productId').execPopulate();
+    let products = user.cart.items.map((i) => {
+      return { quantity: i.quantity, product: { ...i.productId._doc } }; //normal object, not Mongoose Full OBJ
     });
     const order = new Order({
       user: {
-        name: req.user.name,
+        email: req.user.email,
         userId: req.user._id,
       },
       products: products,
     });
     await order.save();
-    await req.user.clearCart();
+    await user.clearCart();
     res.redirect('/orders');
   } catch (error) {
     console.log(error);
   }
 };
 
-exports.getOrders = async (req, res, next) => {
+exports.getOrders = async (req, res) => {
   try {
     let orders = await Order.find({ 'user.userId': req.user._id });
+    console.log(orders);
     res.render('shop/orders', {
       path: '/orders',
       pageTitle: 'Your Orders',

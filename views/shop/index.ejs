@@ -6,6 +6,9 @@
     <%- include('../includes/navigation.ejs') %>
 
     <main>
+      <% if (message) { %>
+        <div class="message message-success"><%= message %></div>
+      <% } %>
         <% if (prods.length > 0) { %>
             <div class="grid">
                 <% for (let product of prods) { %>
@@ -27,11 +30,6 @@
                         </div>
                     </article>
                 <% } %>
-                <!-- <article class="card product-item">
-                  <div class="card__content">
-                    <h1><%= csrfToken %></h1>
-                  </div>
-                </article> -->
             </div>
             
         <% } else { %>

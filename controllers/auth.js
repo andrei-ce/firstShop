@@ -3,20 +3,38 @@ const bcrypt = require('bcrypt');
 
 exports.getLogin = async (req, res) => {
   try {
+    let message = req.flash('error');
+    if (message.length > 0) {
+      message = message[0];
+    } else {
+      message = null;
+    }
     res.render('auth/login', {
       path: '/login',
       pageTitle: 'Login',
+      errorMessage: message,
     });
   } catch (error) {
     console.log(error);
   }
 };
 
-exports.getSignup = (req, res) => {
-  res.render('auth/signup', {
-    path: '/signup',
-    pageTitle: 'Signup',
-  });
+exports.getSignup = async (req, res) => {
+  try {
+    let message = req.flash('error');
+    if (message.length > 0) {
+      message = message[0];
+    } else {
+      message = null;
+    }
+    res.render('auth/signup', {
+      path: '/signup',
+      pageTitle: 'Signup',
+      errorMessage: message,
+    });
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 exports.postLogin = async (req, res) => {
@@ -24,6 +42,7 @@ exports.postLogin = async (req, res) => {
     let { email, password } = req.body;
     let user = await User.findOne({ email: email });
     if (!user) {
+      req.flash('error', 'Invalid email or password');
       return res.redirect('/login');
     }
     let doMatch = await bcrypt.compare(password, user.password);
@@ -36,6 +55,7 @@ exports.postLogin = async (req, res) => {
         return res.redirect('/');
       });
     } else {
+      req.flash('error', 'Invalid email or password');
       return res.redirect('/login');
     }
   } catch (error) {
@@ -59,6 +79,7 @@ exports.postSignup = async (req, res) => {
     const userExists = await User.findOne({ email: email });
 
     if (userExists) {
+      req.flash('error', 'Email already registered, please choose another one');
       return res.redirect('/signup');
     } else {
       const salt = await bcrypt.genSalt(12);
