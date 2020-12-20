@@ -21,3 +21,10 @@
 .form-control textarea:focus {
   outline-color: #00695c;
 }
+
+.reset-password {
+  margin-top: 15px;
+  outline-color: #b8b8b8;
+  border-color: #ffffff;
+  color: #b8b8b8;
+}

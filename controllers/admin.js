@@ -1,5 +1,4 @@
 const Product = require('../models/product');
-const User = require('../models/user');
 
 exports.getAddProduct = (req, res, next) => {
   res.render('admin/edit-product', {
@@ -54,31 +53,35 @@ exports.getEditProduct = async (req, res, next) => {
   }
 };
 
-exports.postEditProduct = (req, res, next) => {
-  const prodId = req.body.productId;
-  const updatedTitle = req.body.title;
-  const updatedPrice = req.body.price;
-  const updatedImageUrl = req.body.imageUrl;
-  const updatedDesc = req.body.description;
+exports.postEditProduct = async (req, res, next) => {
+  try {
+    const prodId = req.body.productId;
+    const updatedTitle = req.body.title;
+    const updatedPrice = req.body.price;
+    const updatedImageUrl = req.body.imageUrl;
+    const updatedDesc = req.body.description;
 
-  Product.findById(prodId)
-    .then((product) => {
-      product.title = updatedTitle;
-      product.price = updatedPrice;
-      product.description = updatedDesc;
-      product.imageUrl = updatedImageUrl;
-      return product.save();
-    })
-    .then((result) => {
-      console.log('UPDATED PRODUCT!');
-      res.redirect('/admin/products');
-    })
-    .catch((err) => console.log(err));
+    let product = await Product.findById(prodId);
+    if (product.userId.toString() !== req.user._id.toString()) {
+      return res.redirect('/');
+    }
+
+    product.title = updatedTitle;
+    product.price = updatedPrice;
+    product.description = updatedDesc;
+    product.imageUrl = updatedImageUrl;
+    await product.save();
+
+    console.log('UPDATED PRODUCT!');
+    res.redirect('/admin/products');
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 exports.getProducts = async (req, res, next) => {
   try {
-    let products = await Product.find();
+    let products = await Product.find({ userId: req.user._id });
     res.render('admin/products', {
       prods: products,
       pageTitle: 'Admin Products',
@@ -93,7 +96,7 @@ exports.getProducts = async (req, res, next) => {
 exports.postDeleteProduct = async (req, res, next) => {
   try {
     const prodId = req.body.productId;
-    await Product.findByIdAndRemove(prodId);
+    await Product.deleteOne({ _id: prodId, userId: req.user.id });
     //TODO: DELETE THIS PRODUCT IN ALL CARTS
     // await User.find({cart.items : $in {blablabla }});
     console.log('DESTROYED PRODUCT');

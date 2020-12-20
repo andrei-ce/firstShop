@@ -1,5 +1,7 @@
 const User = require('../models/user');
 const bcrypt = require('bcrypt');
+const sendMail = require('../services/nodemailer');
+const crypto = require('crypto');
 
 exports.getLogin = async (req, res) => {
   try {
@@ -83,12 +85,113 @@ exports.postSignup = async (req, res) => {
       return res.redirect('/signup');
     } else {
       const salt = await bcrypt.genSalt(12);
-      password = await bcrypt.hash(password, salt);
-      let user = new User({ email, password, cart: { items: [] } });
-
+      hashedPassword = await bcrypt.hash(password, salt);
+      let user = new User({ email, password: hashedPassword, cart: { items: [] } });
       await user.save();
-      return res.redirect('/login');
+
+      //confirmation email not blocking the redirect:
+      res.redirect('/login');
+      return await sendMail({
+        to: email,
+        from: 'admin@first-shop.com',
+        subject: 'Signup successfull ✅',
+        html: '<h1>Congratulationg</h1><h4>Your account in shop.com has been created</h4>',
+      });
     }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+exports.getReset = async (req, res) => {
+  try {
+    let message = req.flash('error');
+    if (message.length > 0) {
+      message = message[0];
+    } else {
+      message = null;
+    }
+    res.render('auth/reset', {
+      path: '/reset-password',
+      pageTitle: 'Reset',
+      errorMessage: message,
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+exports.postReset = async (req, res) => {
+  console.log('In post reset page');
+  try {
+    crypto.randomBytes(32, async (error, buffer) => {
+      if (error) {
+        return res.redirect('/reset-password');
+      }
+      const token = buffer.toString('hex');
+      let user = await User.findOne({ email: req.body.email });
+      if (!user) {
+        req.flash('error', 'No such account found.');
+        return res.redirect('/reset-password');
+      } else {
+        (user.resetToken = token), (user.resetTokenExpiration = Date.now() + 3600000);
+        await user.save();
+      }
+      //not blocking the email sending part...
+      res.redirect('/');
+      return await sendMail({
+        to: user.email,
+        from: 'admin@first-shop.com',
+        subject: 'Your reset password link 🔑',
+        html: `
+          <h1>Hello</h1>
+          <h4>Click <a href="http://localhost:3000/reset-password/${token}">this link</a> to continue the reset password process</h4>
+        `,
+      });
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+exports.getNewPassword = async (req, res) => {
+  try {
+    const token = req.params.token;
+    let user = await User.findOne({ resetToken: token, resetTokenExpiration: { $gt: Date.now() } });
+    let message = req.flash('error');
+    if (message.length > 0) {
+      message = message[0];
+    } else {
+      message = null;
+    }
+    res.render('auth/new-password', {
+      path: '/new-password',
+      pageTitle: 'New Password',
+      errorMessage: message,
+      userId: user._id.toString(),
+      passwordToken: token,
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+exports.postNewPassword = async (req, res) => {
+  try {
+    const { password, userId, passwordToken } = req.body;
+    let resetUser = await User.findOne({
+      resetToken: passwordToken,
+      resetTokenExpiration: { $gt: Date.now() },
+      _id: userId,
+    });
+    const salt = await bcrypt.genSalt(12);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    resetUser.password = hashedPassword;
+    resetUser.resetToken = undefined;
+    resetUser.resetToken = undefined;
+    await resetUser.save();
+
+    return res.redirect('auth/login');
   } catch (error) {
     console.log(error);
   }
