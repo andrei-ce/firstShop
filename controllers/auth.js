@@ -2,6 +2,7 @@ const User = require('../models/user');
 const bcrypt = require('bcrypt');
 const sendMail = require('../services/nodemailer');
 const crypto = require('crypto');
+const { validationResult } = require('express-validator');
 
 exports.getLogin = async (req, res) => {
   try {
@@ -33,6 +34,8 @@ exports.getSignup = async (req, res) => {
       path: '/signup',
       pageTitle: 'Signup',
       errorMessage: message,
+      oldInput: { email: '', password: '', confirmPassword: '' },
+      validationErrors: [],
     });
   } catch (error) {
     console.log(error);
@@ -41,12 +44,22 @@ exports.getSignup = async (req, res) => {
 
 exports.postLogin = async (req, res) => {
   try {
+    //inputs
     let { email, password } = req.body;
-    let user = await User.findOne({ email: email });
-    if (!user) {
-      req.flash('error', 'Invalid email or password');
-      return res.redirect('/login');
+
+    //errors
+    const errors = validationResult(req);
+    console.log(errors.array());
+    if (!errors.isEmpty()) {
+      return res.status(422).render('auth/login', {
+        path: '/login',
+        pageTitle: 'Login',
+        errorMessage: errors.array()[0].msg,
+      });
     }
+
+    //logic
+    let user = await User.findOne({ email: req.body.email });
     let doMatch = await bcrypt.compare(password, user.password);
     if (doMatch) {
       console.log('Match!');
@@ -57,7 +70,7 @@ exports.postLogin = async (req, res) => {
         return res.redirect('/');
       });
     } else {
-      req.flash('error', 'Invalid email or password');
+      req.flash('error', 'Invalid email or password C');
       return res.redirect('/login');
     }
   } catch (error) {
@@ -77,27 +90,33 @@ exports.postLogout = async (req, res) => {
 
 exports.postSignup = async (req, res) => {
   try {
+    //inputs
     let { email, password, confirmPassword } = req.body;
-    const userExists = await User.findOne({ email: email });
-
-    if (userExists) {
-      req.flash('error', 'Email already registered, please choose another one');
-      return res.redirect('/signup');
-    } else {
-      const salt = await bcrypt.genSalt(12);
-      hashedPassword = await bcrypt.hash(password, salt);
-      let user = new User({ email, password: hashedPassword, cart: { items: [] } });
-      await user.save();
-
-      //confirmation email not blocking the redirect:
-      res.redirect('/login');
-      return await sendMail({
-        to: email,
-        from: 'admin@first-shop.com',
-        subject: 'Signup successfull ✅',
-        html: '<h1>Congratulationg</h1><h4>Your account in shop.com has been created</h4>',
+    //errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).render('auth/signup', {
+        path: '/signup',
+        pageTitle: 'Signup',
+        errorMessage: errors.array()[0].msg,
+        oldInput: { email, password, confirmPassword },
+        validationErrors: errors.array(),
       });
     }
+    //logic
+    const salt = await bcrypt.genSalt(12);
+    hashedPassword = await bcrypt.hash(password, salt);
+    let user = new User({ email, password: hashedPassword, cart: { items: [] } });
+    await user.save();
+
+    //confirmation email not blocking the redirect:
+    res.redirect('/login');
+    return await sendMail({
+      to: email,
+      from: 'admin@first-shop.com',
+      subject: 'Signup successfull ✅',
+      html: '<h1>Congratulationg</h1><h4>Your account in shop.com has been created</h4>',
+    });
   } catch (error) {
     console.log(error);
   }

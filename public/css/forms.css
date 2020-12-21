@@ -28,3 +28,8 @@
   border-color: #ffffff;
   color: #b8b8b8;
 }
+
+.form-control textarea.invalid,
+.form-control input.invalid {
+  border-color: red;
+}
