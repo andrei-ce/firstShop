@@ -1,5 +1,7 @@
 const Product = require('../models/product');
 const { validationResult } = require('express-validator');
+// const mongoose = require('mongoose');
+const returnError = require('../services/returnError');
 
 exports.getAddProduct = (req, res, next) => {
   res.render('admin/edit-product', {
@@ -14,10 +16,9 @@ exports.getAddProduct = (req, res, next) => {
 };
 
 exports.postAddProduct = async (req, res, next) => {
+  //inputs
+  const { title, price, description, imageUrl } = req.body;
   try {
-    //inputs
-    const { title, price, description, imageUrl } = req.body;
-
     //errors
     const errors = validationResult(req);
     console.log(errors.array());
@@ -43,8 +44,26 @@ exports.postAddProduct = async (req, res, next) => {
     await product.save();
     console.log('Created Product');
     res.redirect('/admin/products');
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    // (1)
+    // return res.status(500).render('admin/edit-product', {
+    //   pageTitle: 'Add Product',
+    //   path: '/admin/add-product',
+    //   editing: false,
+    //   hasError: true,
+    //   product: { title, price, description, imageUrl },
+    //   errorMessage: 'Database operation failed. Please try again.',
+    //   validationErrors: [],
+    // });
+
+    // (2)
+    // return res.redirect('/500');
+
+    // (3)
+    // const error = new Error(error);
+    // error.httpStatusCode(500);
+    // next(error);
+    returnError(error, next);
   }
 };
 
@@ -70,7 +89,7 @@ exports.getEditProduct = async (req, res, next) => {
       validationErrors: [],
     });
   } catch (error) {
-    console.log(error);
+    returnError(error, next);
   }
 };
 
@@ -118,7 +137,7 @@ exports.postEditProduct = async (req, res, next) => {
     console.log('UPDATED PRODUCT!');
     res.redirect('/admin/products');
   } catch (error) {
-    console.log(error);
+    returnError(error, next);
   }
 };
 
@@ -132,7 +151,7 @@ exports.getProducts = async (req, res, next) => {
       isAuth: req.session.isAuth,
     });
   } catch (error) {
-    console.log(error);
+    returnError(error, next);
   }
 };
 
@@ -145,6 +164,6 @@ exports.postDeleteProduct = async (req, res, next) => {
     console.log('DESTROYED PRODUCT');
     res.redirect('/admin/products');
   } catch (error) {
-    console.log(error);
+    returnError(error, next);
   }
 };

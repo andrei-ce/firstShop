@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const sendMail = require('../services/nodemailer');
 const crypto = require('crypto');
 const { validationResult } = require('express-validator');
+const returnError = require('../services/returnError');
 
 exports.getLogin = async (req, res) => {
   try {
@@ -70,11 +71,11 @@ exports.postLogin = async (req, res) => {
         return res.redirect('/');
       });
     } else {
-      req.flash('error', 'Invalid email or password C');
+      req.flash('error', 'Invalid email or password!');
       return res.redirect('/login');
     }
   } catch (error) {
-    console.log(error);
+    returnError(error, next);
   }
 };
 
@@ -84,7 +85,7 @@ exports.postLogout = async (req, res) => {
       res.redirect('/');
     });
   } catch (error) {
-    console.log(error);
+    returnError(error, next);
   }
 };
 
@@ -118,7 +119,7 @@ exports.postSignup = async (req, res) => {
       html: '<h1>Congratulationg</h1><h4>Your account in shop.com has been created</h4>',
     });
   } catch (error) {
-    console.log(error);
+    returnError(error, next);
   }
 };
 
@@ -136,7 +137,7 @@ exports.getReset = async (req, res) => {
       errorMessage: message,
     });
   } catch (error) {
-    console.log(error);
+    returnError(error, next);
   }
 };
 
@@ -169,7 +170,7 @@ exports.postReset = async (req, res) => {
       });
     });
   } catch (error) {
-    console.log(error);
+    returnError(error, next);
   }
 };
 
@@ -191,7 +192,7 @@ exports.getNewPassword = async (req, res) => {
       passwordToken: token,
     });
   } catch (error) {
-    console.log(error);
+    returnError(error, next);
   }
 };
 
@@ -212,6 +213,6 @@ exports.postNewPassword = async (req, res) => {
 
     return res.redirect('auth/login');
   } catch (error) {
-    console.log(error);
+    returnError(error, next);
   }
 };

@@ -31,7 +31,14 @@ const errorController = require('./controllers/error');
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
 app.use(authRoutes);
+app.get('/500', errorController.get500);
 app.use(errorController.get404);
+
+//this would never be reached if there wasnt a 4 arg middleware below
+app.use((error, req, res, next) => {
+  // console.log(error.httpStatusCode);
+  res.redirect('/500');
+});
 
 // ____ Database & Server spin-up ____
 const PORT = process.env.PORT || 3000; //deployment looks for process.env.PORT

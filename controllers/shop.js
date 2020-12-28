@@ -1,5 +1,6 @@
 const Product = require('../models/product');
 const Order = require('../models/order');
+const returnError = require('../services/returnError');
 
 exports.getProducts = async (req, res) => {
   try {
@@ -11,7 +12,7 @@ exports.getProducts = async (req, res) => {
       isAuth: req.session.isAuth,
     });
   } catch (error) {
-    console.log(error);
+    returnError(error, next);
   }
 };
 
@@ -26,7 +27,7 @@ exports.getProduct = async (req, res) => {
       isAuth: req.session.isAuth,
     });
   } catch (error) {
-    console.log(error);
+    returnError(error, next);
   }
 };
 
@@ -40,7 +41,7 @@ exports.getIndex = async (req, res) => {
       isAuth: req.session.isAuth,
     });
   } catch (error) {
-    console.log(error);
+    returnError(error, next);
   }
 };
 
@@ -57,7 +58,7 @@ exports.getCart = async (req, res) => {
       isAuth: req.session.isAuth,
     });
   } catch (error) {
-    console.log(error);
+    returnError(error, next);
   }
 };
 
@@ -68,7 +69,7 @@ exports.postCart = async (req, res) => {
     await req.user.addToCart(product);
     res.redirect('/cart');
   } catch (error) {
-    console.log(error);
+    returnError(error, next);
   }
 };
 
@@ -78,7 +79,7 @@ exports.postCartDeleteProduct = async (req, res) => {
     await req.user.removeFromCart(prodId);
     res.redirect('/cart');
   } catch (error) {
-    console.log(error);
+    returnError(error, next);
   }
 };
 
@@ -99,7 +100,7 @@ exports.postOrder = async (req, res) => {
     await user.clearCart();
     res.redirect('/orders');
   } catch (error) {
-    console.log(error);
+    returnError(error, next);
   }
 };
 
@@ -114,6 +115,6 @@ exports.getOrders = async (req, res) => {
       isAuth: req.session.isAuth,
     });
   } catch (error) {
-    console.log(error);
+    returnError(error, next);
   }
 };

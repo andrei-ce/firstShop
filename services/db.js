@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const config = require('config');
 const connectionString = config.get('mongoURI');
-const User = require('../models/user');
 
 const connectDB = async (cb) => {
   try {
