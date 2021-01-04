@@ -17,7 +17,8 @@ exports.getAddProduct = (req, res, next) => {
 
 exports.postAddProduct = async (req, res, next) => {
   //inputs
-  const { title, price, description, imageUrl } = req.body;
+  const { title, price, description, image } = req.body;
+  console.log(image);
   try {
     //errors
     const errors = validationResult(req);
