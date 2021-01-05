@@ -15,6 +15,7 @@ exports.getAddProduct = (req, res, next) => {
 };
 
 exports.postAddProduct = async (req, res, next) => {
+  console.log('Hit poastAddProduct endpoint');
   //inputs
   const { title, price, description } = req.body;
   const image = req.file;
@@ -25,17 +26,29 @@ exports.postAddProduct = async (req, res, next) => {
   try {
     //errors
     const errors = validationResult(req);
+    if (!image) {
+      return res.status(422).render('admin/edit-product', {
+        path: '/admin/add-product',
+        pageTitle: 'Add Product',
+        editing: false,
+        product: { title, price, description },
+        hasError: true,
+        errorMessage: 'Attached file is not recognized as an image',
+        validationErrors: errors.array(),
+      });
+    }
     if (!errors.isEmpty()) {
       return res.status(422).render('admin/edit-product', {
         path: '/admin/add-product',
         pageTitle: 'Add Product',
         editing: false,
-        product: { title, price, description, imageUrl },
+        product: { title, price, description },
         hasError: true,
         errorMessage: errors.array()[0].msg,
         validationErrors: errors.array(),
       });
     }
+    const imageUrl = image.path;
 
     const product = new Product({
       title,
@@ -97,12 +110,12 @@ exports.getEditProduct = async (req, res, next) => {
 };
 
 exports.postEditProduct = async (req, res, next) => {
+  //inputs
   try {
-    //inputs
     const prodId = req.body.productId;
     const updatedTitle = req.body.title;
     const updatedPrice = req.body.price;
-    const updatedImageUrl = req.body.imageUrl;
+    const image = req.file;
     const updatedDesc = req.body.description;
 
     //errors
@@ -117,7 +130,6 @@ exports.postEditProduct = async (req, res, next) => {
           title: updatedTitle,
           price: updatedPrice,
           description: updatedDesc,
-          imageUrl: updatedImageUrl,
           _id: prodId,
         },
         hasError: true,
@@ -134,7 +146,9 @@ exports.postEditProduct = async (req, res, next) => {
     product.title = updatedTitle;
     product.price = updatedPrice;
     product.description = updatedDesc;
-    product.imageUrl = updatedImageUrl;
+    if (image) {
+      product.imageUrl = image.path;
+    }
     await product.save();
 
     console.log('UPDATED PRODUCT!');

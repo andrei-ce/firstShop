@@ -1,6 +1,8 @@
 const Product = require('../models/product');
 const Order = require('../models/order');
 const returnError = require('../services/returnError');
+const fs = require('fs');
+const path = require('path');
 
 exports.getProducts = async (req, res) => {
   try {
@@ -113,6 +115,23 @@ exports.getOrders = async (req, res) => {
       pageTitle: 'Your Orders',
       orders: orders,
       isAuth: req.session.isAuth,
+    });
+  } catch (error) {
+    returnError(error, next);
+  }
+};
+
+exports.getInvoice = async (req, res, next) => {
+  try {
+    const orderId = req.params.orderId;
+    const invoiceName = `invoice-${orderId}.pdf`;
+    const invoicePath = path.join('data', 'invoices', invoiceName);
+    fs.readFile(invoicePath, (err, data) => {
+      if (err) {
+        return next(err);
+      } else {
+        res.send(data);
+      }
     });
   } catch (error) {
     returnError(error, next);

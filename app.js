@@ -16,8 +16,10 @@ const csrfProtection = csrf();
 app.set('view engine', 'ejs');
 app.set('views', 'views');
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(upload.single('image'));
+//use multer file parser to look for incoming files in any request. This is not recommended in multer docs. Only endpoints that receive files should have this middleware. As of now, if I add in the admin routes, it would crash.
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(upload.single('image'));
 app.use(sessionConfig);
 app.use(csrfProtection);
 app.use(userProvider);
@@ -38,6 +40,7 @@ app.use(errorController.get404);
 //this would never be reached if there wasnt a 4 arg middleware below
 app.use((error, req, res, next) => {
   // console.log(error.httpStatusCode);
+  console.log(error);
   res.redirect('/500');
 });
 

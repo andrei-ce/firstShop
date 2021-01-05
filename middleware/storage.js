@@ -11,9 +11,12 @@ const fileStorage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  let mime = file.mimetype.split('/').pop();
-  console.log(mime);
-  if (mime === 'png' || mime === 'jpg' || mime === 'jpeg') {
+  let incomingExt = file.mimetype.split('/').pop();
+  let acceptedExt = ['png', 'jpg', 'jpeg'];
+  console.log(incomingExt);
+  if (acceptedExt.includes(incomingExt)) {
+    console.log('ext passed!');
+    console.log(file);
     cb(null, true);
   } else {
     cb(null, false);
