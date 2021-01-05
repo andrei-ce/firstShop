@@ -4,11 +4,11 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const csrf = require('csurf');
 const flash = require('connect-flash');
-const multer = require('multer');
 const connectDB = require('./services/db');
 const userProvider = require('./middleware/userProvider');
 const sessionConfig = require('./middleware/sessions');
 const csrfMiddleware = require('./middleware/csrf');
+const upload = require('./middleware/storage');
 
 // ____ Middlewares ____
 const app = express();
@@ -16,7 +16,7 @@ const csrfProtection = csrf();
 app.set('view engine', 'ejs');
 app.set('views', 'views');
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(multer().single('image'));
+app.use(upload.single('image'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(sessionConfig);
 app.use(csrfProtection);
