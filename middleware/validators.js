@@ -53,7 +53,7 @@ exports.validateAddProduct = [
     .isString()
     .isLength({ min: 3 })
     .trim(),
-  check('imageUrl', 'Please enter a valid image URL').isURL(),
+  // check('imageUrl', 'Please enter a valid image URL').isURL(),
   check('price', 'Please enter a valid price value').isNumeric(),
   check('description', 'Please enter a description between 10-300 characters').isLength({ min: 10, max: 300 }).trim(),
 ];

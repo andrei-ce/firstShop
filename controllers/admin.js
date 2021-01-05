@@ -1,6 +1,5 @@
 const Product = require('../models/product');
 const { validationResult } = require('express-validator');
-// const mongoose = require('mongoose');
 const returnError = require('../services/returnError');
 
 exports.getAddProduct = (req, res, next) => {
@@ -17,11 +16,15 @@ exports.getAddProduct = (req, res, next) => {
 
 exports.postAddProduct = async (req, res, next) => {
   //inputs
-  const { title, price, description, imageUrl } = req.body;
+  const { title, price, description } = req.body;
+  const image = req.file;
+  console.log('image::::::::::::::::::::::::::::::::::::::::::::::::::::::::');
+  console.log(image);
+  console.log('image::::::::::::::::::::::::::::::::::::::::::::::::::::::::');
+
   try {
     //errors
     const errors = validationResult(req);
-    console.log(errors.array());
     if (!errors.isEmpty()) {
       return res.status(422).render('admin/edit-product', {
         path: '/admin/add-product',
