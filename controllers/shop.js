@@ -3,6 +3,7 @@ const Order = require('../models/order');
 const returnError = require('../services/returnError');
 const fs = require('fs');
 const path = require('path');
+const PDFDocument = require('pdfkit');
 
 exports.getProducts = async (req, res) => {
   try {
@@ -124,15 +125,61 @@ exports.getOrders = async (req, res) => {
 exports.getInvoice = async (req, res, next) => {
   try {
     const orderId = req.params.orderId;
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return next(new Error('No orders found'));
+    } else if (order.user.userId.toString() != req.user._id.toString()) {
+      return next(new Error('Unauthorized'));
+    }
+
     const invoiceName = `invoice-${orderId}.pdf`;
     const invoicePath = path.join('data', 'invoices', invoiceName);
-    fs.readFile(invoicePath, (err, data) => {
-      if (err) {
-        return next(err);
-      } else {
-        res.send(data);
-      }
+
+    //READING, STORING IN SERVER MEMORY AND SERVING FILE
+    // fs.readFile(invoicePath, (err, data) => {
+    //   if (err) {
+    //     return next(err);
+    //   } else {
+    //     res.setHeader('Content-Type', 'application/pdf');
+    //     //change inline to attachment to download file
+    //     res.setHeader('Content-Disposition', 'inline; filename="' + invoiceName + '"');
+    //     res.send(data);
+    //   }
+    // });
+
+    // //STREAMING THE FILE IN CHUNKS
+    // const file = fs.createReadStream(invoicePath);
+    // res.setHeader('Content-Type', 'application/pdf');
+    // res.setHeader('Content-Disposition', 'inline; filename="' + invoiceName + '"');
+    // //as the response is a writable stream object, we can call file.pipe() on the response
+    // file.pipe(res);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline; filename="' + invoiceName + '"');
+
+    const doc = new PDFDocument();
+    doc.pipe(fs.createWriteStream(invoicePath));
+    doc.pipe(res);
+
+    doc.fontSize(20).text('Vantage Parts: Invoice', { align: 'center', underline: true });
+    doc.moveDown();
+
+    //price items and total price calculation logic
+    let totalPrice = 0;
+    order.products.forEach((prod) => {
+      totalPrice += prod.quantity * prod.product.price;
+      doc.fontSize(10).text(`${prod.product.title} .................... ${prod.quantity} x $ ${prod.product.price}`, {
+        align: 'right',
+      });
     });
+
+    doc.moveDown();
+    doc.moveDown();
+    doc.moveDown();
+    doc.fontSize(12).text('---------------------------', { align: 'right' });
+    doc.fontSize(12).text(`Total price: $${totalPrice}`, { align: 'right' });
+
+    doc.end();
   } catch (error) {
     returnError(error, next);
   }

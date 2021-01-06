@@ -1,6 +1,7 @@
 const Product = require('../models/product');
 const { validationResult } = require('express-validator');
 const returnError = require('../services/returnError');
+const fileHelper = require('../services/fileHelper');
 
 exports.getAddProduct = (req, res, next) => {
   res.render('admin/edit-product', {
@@ -15,7 +16,6 @@ exports.getAddProduct = (req, res, next) => {
 };
 
 exports.postAddProduct = async (req, res, next) => {
-  console.log('Hit poastAddProduct endpoint');
   //inputs
   const { title, price, description } = req.body;
   const image = req.file;
@@ -147,6 +147,8 @@ exports.postEditProduct = async (req, res, next) => {
     product.price = updatedPrice;
     product.description = updatedDesc;
     if (image) {
+      //delete the file in the uploads file
+      fileHelper.deleteFile(product.imageUrl);
       product.imageUrl = image.path;
     }
     await product.save();
@@ -175,10 +177,18 @@ exports.getProducts = async (req, res, next) => {
 exports.postDeleteProduct = async (req, res, next) => {
   try {
     const prodId = req.body.productId;
+
+    //delete saved image on server
+    let product = await Product.findById(prodId);
+    if (!product) {
+      return next(new Error('Product not found'));
+    }
+    await fileHelper.deleteFile(product.imageUrl);
+
     await Product.deleteOne({ _id: prodId, userId: req.user.id });
     //TODO: DELETE THIS PRODUCT IN ALL CARTS
     // await User.find({cart.items : $in {blablabla }});
-    console.log('DESTROYED PRODUCT');
+    console.log('PRODUCT DESTROYED');
     res.redirect('/admin/products');
   } catch (error) {
     returnError(error, next);
