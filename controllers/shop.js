@@ -7,7 +7,7 @@ const PDFDocument = require('pdfkit');
 
 const ITEMS_PER_PAGE = 2;
 
-exports.getProducts = async (req, res) => {
+exports.getProducts = async (req, res, next) => {
   try {
     const page =
       +req.query.page || //+ is to turn into number
@@ -36,7 +36,7 @@ exports.getProducts = async (req, res) => {
   }
 };
 
-exports.getProduct = async (req, res) => {
+exports.getProduct = async (req, res, next) => {
   try {
     const prodId = req.params.productId;
     let product = await Product.findById(prodId);
@@ -51,7 +51,7 @@ exports.getProduct = async (req, res) => {
   }
 };
 
-exports.getIndex = async (req, res) => {
+exports.getIndex = async (req, res, next) => {
   try {
     const page =
       +req.query.page || //+ is to turn into number
@@ -80,7 +80,7 @@ exports.getIndex = async (req, res) => {
   }
 };
 
-exports.getCart = async (req, res) => {
+exports.getCart = async (req, res, next) => {
   try {
     //execPopulate() is needed because req.user is an existing document
     let user = await req.user.populate('cart.items.productId').execPopulate();
@@ -97,7 +97,7 @@ exports.getCart = async (req, res) => {
   }
 };
 
-exports.postCart = async (req, res) => {
+exports.postCart = async (req, res, next) => {
   try {
     const prodId = req.body.productId;
     let product = await Product.findById(prodId);
@@ -108,7 +108,7 @@ exports.postCart = async (req, res) => {
   }
 };
 
-exports.postCartDeleteProduct = async (req, res) => {
+exports.postCartDeleteProduct = async (req, res, next) => {
   try {
     const prodId = req.body.productId;
     await req.user.removeFromCart(prodId);
@@ -118,7 +118,27 @@ exports.postCartDeleteProduct = async (req, res) => {
   }
 };
 
-exports.postOrder = async (req, res) => {
+exports.getCheckout = async (req, res, next) => {
+  try {
+    let user = await req.user.populate('cart.items.productId').execPopulate();
+    const products = user.cart.items;
+    //total price:
+    let total = 0;
+    products.forEach((p) => (total += p.quantity * p.productId.price));
+
+    res.render('shop/checkout', {
+      path: '/checkout',
+      pageTitle: 'Checkout',
+      products: products,
+      totalPrice: total,
+      isAuth: req.session.isAuth,
+    });
+  } catch (error) {
+    returnError(error, next);
+  }
+};
+
+exports.postOrder = async (req, res, next) => {
   try {
     let user = await req.user.populate('cart.items.productId').execPopulate();
     let products = user.cart.items.map((i) => {
@@ -139,7 +159,7 @@ exports.postOrder = async (req, res) => {
   }
 };
 
-exports.getOrders = async (req, res) => {
+exports.getOrders = async (req, res, next) => {
   try {
     let orders = await Order.find({ 'user.userId': req.user._id });
     console.log(orders);
