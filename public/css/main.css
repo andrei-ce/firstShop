@@ -259,3 +259,27 @@ form {
     width: 30rem;
   }
 }
+
+.pagination {
+  margin: 2rem 0 2rem 0;
+  text-align: center;
+}
+.pagination a {
+  margin: 0.25rem;
+  text-decoration: none;
+  color: #00695c;
+  padding: 0.5rem;
+  border: 1px solid rgb(151, 151, 151);
+}
+
+.pagination a:hover,
+.pagination a:active,
+.pagination a.active {
+  color: #ffffff;
+  background-color: #00695c;
+  padding: 0.5rem;
+  box-shadow: 3px 3px 0px -1px #69000d;
+  -webkit-box-shadow: 3px 3px 0px -1px #69000d;
+  -moz-box-shadow: 3px 3px 0px -1px #69000d;
+  border: 0.2px solid #fff;
+}

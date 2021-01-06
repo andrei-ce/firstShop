@@ -5,14 +5,31 @@ const fs = require('fs');
 const path = require('path');
 const PDFDocument = require('pdfkit');
 
+const ITEMS_PER_PAGE = 2;
+
 exports.getProducts = async (req, res) => {
   try {
-    let products = await Product.find();
+    const page =
+      +req.query.page || //+ is to turn into number
+      1; //1 is to load if the user had enter no page parameter in the url
+    let prodCount = await Product.find().countDocuments();
+    let products = await Product.find()
+      .skip((page - 1) * ITEMS_PER_PAGE)
+      .limit(ITEMS_PER_PAGE);
+
     res.render('shop/product-list', {
       prods: products,
       pageTitle: 'All Products',
       path: '/products',
       isAuth: req.session.isAuth,
+      prodCount: prodCount,
+      currentPage: page,
+      //not really using these variables below because I will load all page buttons
+      hasNextPage: ITEMS_PER_PAGE * page < prodCount,
+      hasPrevPage: page > 1,
+      nextPage: page + 1,
+      prevPage: page - 1,
+      lastPage: Math.ceil(prodCount / ITEMS_PER_PAGE),
     });
   } catch (error) {
     returnError(error, next);
@@ -36,12 +53,27 @@ exports.getProduct = async (req, res) => {
 
 exports.getIndex = async (req, res) => {
   try {
-    let products = await Product.find();
+    const page =
+      +req.query.page || //+ is to turn into number
+      1; //1 is to load if the user had enter no page parameter in the url
+    let prodCount = await Product.find().countDocuments();
+    let products = await Product.find()
+      .skip((page - 1) * ITEMS_PER_PAGE)
+      .limit(ITEMS_PER_PAGE);
+
     res.render('shop/index', {
       prods: products,
       pageTitle: 'Shop',
       path: '/',
       isAuth: req.session.isAuth,
+      prodCount: prodCount,
+      currentPage: page,
+      //not really using these variables below because I will load all page buttons
+      hasNextPage: ITEMS_PER_PAGE * page < prodCount,
+      hasPrevPage: page > 1,
+      nextPage: page + 1,
+      prevPage: page - 1,
+      lastPage: Math.ceil(prodCount / ITEMS_PER_PAGE),
     });
   } catch (error) {
     returnError(error, next);
