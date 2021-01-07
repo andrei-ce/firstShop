@@ -4,6 +4,9 @@ const returnError = require('../services/returnError');
 const fs = require('fs');
 const path = require('path');
 const PDFDocument = require('pdfkit');
+const config = require('config');
+const product = require('../models/product');
+const stripe = require('stripe')(config.get('stripeKey'));
 
 const ITEMS_PER_PAGE = 2;
 
@@ -85,7 +88,7 @@ exports.getCart = async (req, res, next) => {
     //execPopulate() is needed because req.user is an existing document
     let user = await req.user.populate('cart.items.productId').execPopulate();
     const products = user.cart.items;
-    console.log(products);
+    // console.log(products);
     res.render('shop/cart', {
       path: '/cart',
       pageTitle: 'Your Cart',
@@ -121,24 +124,47 @@ exports.postCartDeleteProduct = async (req, res, next) => {
 exports.getCheckout = async (req, res, next) => {
   try {
     let user = await req.user.populate('cart.items.productId').execPopulate();
-    const products = user.cart.items;
-    //total price:
-    let total = 0;
-    products.forEach((p) => (total += p.quantity * p.productId.price));
+    let products = user.cart.items;
+    let totalPrice = 0;
+    products.forEach((p) => (totalPrice += p.quantity * p.productId.price));
+
+    const session = await stripe.checkout.sessions.create({
+      //Eg. I want to build this for dev mode (but will work in deployment too): http://localhost:3000/checkout/sucess
+      success_url: `${req.protocol}://${req.get('host')}/checkout/success`,
+      cancel_url: `${req.protocol}://${req.get('host')}/checkout/cancel`,
+      payment_method_types: ['card'],
+      mode: 'payment',
+      line_items: products.map((p) => {
+        return {
+          //change to deprecated ?
+          price_data: {
+            currency: 'usd',
+            unit_amount: p.productId.price * 100, //(in cents)
+            product_data: {
+              name: p.productId.title,
+              description: p.productId.description,
+              metadata: { id: p.productId._id.toString() },
+            },
+          },
+          quantity: p.quantity,
+        };
+      }),
+    });
 
     res.render('shop/checkout', {
       path: '/checkout',
       pageTitle: 'Checkout',
       products: products,
-      totalPrice: total,
+      totalPrice: totalPrice,
       isAuth: req.session.isAuth,
+      sessionId: session.id,
     });
   } catch (error) {
     returnError(error, next);
   }
 };
 
-exports.postOrder = async (req, res, next) => {
+exports.getCheckoutSuccess = async (req, res, next) => {
   try {
     let user = await req.user.populate('cart.items.productId').execPopulate();
     let products = user.cart.items.map((i) => {
@@ -162,7 +188,7 @@ exports.postOrder = async (req, res, next) => {
 exports.getOrders = async (req, res, next) => {
   try {
     let orders = await Order.find({ 'user.userId': req.user._id });
-    console.log(orders);
+    // console.log(orders);
     res.render('shop/orders', {
       path: '/orders',
       pageTitle: 'Your Orders',

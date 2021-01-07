@@ -40,6 +40,7 @@ app.use(errorController.get404);
 //this would never be reached if there wasnt a 4 arg middleware below
 app.use((error, req, res, next) => {
   // console.log(error.httpStatusCode);
+  // this is where I can log 500 errors!!
   console.log(error);
   res.redirect('/500');
 });
