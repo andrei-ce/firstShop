@@ -7,4 +7,12 @@ better error handling, MySql, Stripe's API, Pdfkit.
 
 It also uses technology that I have used before: mongoDB, multer, nodemailer, express.
 
-To use it download and type "npm i"
+To use it download and type "npm i". You will also need a config/default.json file with secrets:
+
+{
+  "mongoURI": "xxx",
+  "sessionSecret": "xxx",
+  "bcryptSecret": "xxx",
+  "stripeKey": "xxx"
+}
+
